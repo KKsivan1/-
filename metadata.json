@@ -1,0 +1,5 @@
+{
+  "name": "RedHeritage Digital Platform",
+  "description": "A digital management platform for Red Cultural Heritage, featuring CSV data import, record management, and D3.js knowledge graph visualization.",
+  "requestFramePermissions": []
+}
