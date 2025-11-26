@@ -1,6 +1,6 @@
 import React, { useContext, useState, useMemo, useRef } from 'react';
 import { DataContext } from '../App';
-import { Search, MapPin, Calendar, Eye, X, FileText, Camera, Ruler, Box, BookOpen, Flag, DownloadCloud, File, Edit3, Save, Trash2, PlusCircle, ExternalLink, Maximize2 } from 'lucide-react';
+import { Search, MapPin, Calendar, Eye, X, FileText, Camera, Ruler, Box, BookOpen, Flag, DownloadCloud, File, Edit3, Save, Trash2, PlusCircle, ExternalLink, Maximize2, AlertCircle } from 'lucide-react';
 import { HeritageRecord, ResourceItem } from '../types';
 import { getFileType, formatFileSize } from '../services/dataService';
 
@@ -67,6 +67,22 @@ const AssetCard: React.FC<{
 
 const PreviewModal: React.FC<{ item: ResourceItem; onClose: () => void }> = ({ item, onClose }) => {
     const renderContent = () => {
+        // Handle Missing URL for Demo Data
+        if (!item.url) {
+             return (
+                <div className="flex flex-col items-center justify-center h-full text-stone-400 p-8 text-center">
+                    <div className="bg-stone-800 p-6 rounded-full mb-4">
+                        <AlertCircle size={48} />
+                    </div>
+                    <h3 className="text-xl font-bold text-stone-200 mb-2">演示数据无实体文件</h3>
+                    <p className="max-w-md mb-6 text-stone-500 text-sm">
+                        此记录为系统预置的模拟数据（Mock Data），并未连接实际存储的文件。
+                        <br/>请在“数据采集”页面上传新文件以体验完整预览功能。
+                    </p>
+                </div>
+            );
+        }
+
         if (item.type === 'image') {
             return (
                 <div className="flex items-center justify-center h-full bg-stone-900/50 p-4">
@@ -131,9 +147,7 @@ const PreviewModal: React.FC<{ item: ResourceItem; onClose: () => void }> = ({ i
             
             {/* Content Area */}
             <div className="flex-grow overflow-hidden relative" onClick={e => e.stopPropagation()}>
-                {item.url ? renderContent() : (
-                    <div className="flex items-center justify-center h-full text-white">文件链接已失效</div>
-                )}
+                {renderContent()}
             </div>
         </div>
     );

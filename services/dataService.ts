@@ -34,7 +34,7 @@ export const INITIAL_DATA: HeritageRecord[] = [
     imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/6a/Marshal_Zhang%27s_Mansion_20190822.jpg/640px-Marshal_Zhang%27s_Mansion_20190822.jpg',
     researchNotes: '大青楼结构主体完好，但北部墙体有轻微风化迹象。2024年3月进行了三维激光扫描测绘。',
     literature: [
-      { name: '张氏帅府建筑历史沿革考.pdf', type: 'pdf', size: '2.4MB', date: '2023-11' },
+      { name: '张氏帅府建筑历史沿革考.pdf', type: 'pdf', size: '2.4MB', date: '2023-11', url: 'https://pdfobject.com/pdf/sample.pdf' }, // Added sample PDF
       { name: '民国时期东北官邸建筑研究.docx', type: 'doc', size: '1.1MB', date: '2024-01' }
     ],
     fieldImages: [
@@ -50,7 +50,7 @@ export const INITIAL_DATA: HeritageRecord[] = [
       { name: '大青楼BIM信息模型.rvt', type: 'model', size: '450MB', date: '2024-04' }
     ],
     publicity: [
-      { name: '走进帅府-科普导览手册.pdf', type: 'pdf', size: '8.5MB' }
+      { name: '走进帅府-科普导览手册.pdf', type: 'pdf', size: '8.5MB', url: 'https://pdfobject.com/pdf/sample.pdf' }
     ]
   },
   { 
