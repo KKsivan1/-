@@ -1,6 +1,6 @@
 import React, { useContext, useState, useMemo, useRef } from 'react';
 import { DataContext } from '../App';
-import { Search, MapPin, Calendar, Eye, X, FileText, Camera, Ruler, Box, BookOpen, Flag, DownloadCloud, File, Edit3, Save, Trash2, PlusCircle } from 'lucide-react';
+import { Search, MapPin, Calendar, Eye, X, FileText, Camera, Ruler, Box, BookOpen, Flag, DownloadCloud, File, Edit3, Save, Trash2, PlusCircle, ExternalLink, Maximize2 } from 'lucide-react';
 import { HeritageRecord, ResourceItem } from '../types';
 import { getFileType, formatFileSize } from '../services/dataService';
 
@@ -9,8 +9,9 @@ import { getFileType, formatFileSize } from '../services/dataService';
 const AssetCard: React.FC<{ 
     item: ResourceItem; 
     editable: boolean; 
-    onDelete: () => void; 
-}> = ({ item, editable, onDelete }) => {
+    onDelete: () => void;
+    onPreview: () => void; 
+}> = ({ item, editable, onDelete, onPreview }) => {
     const getIcon = () => {
         switch (item.type) {
             case 'cad': return <Ruler className="text-blue-600" size={20} />;
@@ -23,20 +24,23 @@ const AssetCard: React.FC<{
 
     const getBgColor = () => {
         switch (item.type) {
-            case 'cad': return 'bg-blue-50 border-blue-100';
-            case 'model': return 'bg-purple-50 border-purple-100';
-            case 'pdf': return 'bg-red-50 border-red-100';
-            case 'image': return 'bg-emerald-50 border-emerald-100';
-            default: return 'bg-stone-50 border-stone-100';
+            case 'cad': return 'bg-blue-50 border-blue-100 hover:border-blue-300';
+            case 'model': return 'bg-purple-50 border-purple-100 hover:border-purple-300';
+            case 'pdf': return 'bg-red-50 border-red-100 hover:border-red-300';
+            case 'image': return 'bg-emerald-50 border-emerald-100 hover:border-emerald-300';
+            default: return 'bg-stone-50 border-stone-100 hover:border-stone-300';
         }
     };
 
     return (
-        <div className={`relative flex items-center p-3 rounded-lg border ${getBgColor()} transition-shadow hover:shadow-md group`}>
+        <div 
+            onClick={onPreview}
+            className={`relative flex items-center p-3 rounded-lg border ${getBgColor()} transition-all shadow-sm hover:shadow-md cursor-pointer group select-none`}
+        >
             <div className="mr-3 p-2 bg-white rounded-md shadow-sm">
                 {getIcon()}
             </div>
-            <div className="flex-grow min-w-0 pr-6">
+            <div className="flex-grow min-w-0 pr-8">
                 <p className="text-sm font-semibold text-stone-800 truncate" title={item.name}>{item.name}</p>
                 <div className="flex items-center text-xs text-stone-500 space-x-2">
                     <span className="uppercase">{item.type}</span>
@@ -47,14 +51,90 @@ const AssetCard: React.FC<{
             {editable ? (
                 <button 
                     onClick={(e) => { e.stopPropagation(); onDelete(); }}
-                    className="absolute top-2 right-2 p-1 bg-white rounded-full text-red-400 hover:text-red-600 hover:bg-red-50 shadow-sm opacity-0 group-hover:opacity-100 transition-all"
+                    className="absolute top-2 right-2 p-1.5 bg-white rounded-full text-stone-400 hover:text-red-600 hover:bg-red-50 shadow-sm opacity-0 group-hover:opacity-100 transition-all z-10"
                     title="删除此文件"
                 >
                     <Trash2 size={14} />
                 </button>
             ) : (
-                <DownloadCloud size={16} className="absolute top-4 right-4 text-stone-400 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer hover:text-stone-600" />
+                <div className="absolute top-1/2 -translate-y-1/2 right-3 text-stone-400 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <Eye size={18} />
+                </div>
             )}
+        </div>
+    );
+};
+
+const PreviewModal: React.FC<{ item: ResourceItem; onClose: () => void }> = ({ item, onClose }) => {
+    const renderContent = () => {
+        if (item.type === 'image') {
+            return (
+                <div className="flex items-center justify-center h-full bg-stone-900/50 p-4">
+                    <img src={item.url} alt={item.name} className="max-w-full max-h-full object-contain rounded shadow-2xl" />
+                </div>
+            );
+        }
+        if (item.type === 'pdf') {
+            return (
+                <iframe src={item.url} className="w-full h-full bg-stone-100" title={item.name}></iframe>
+            );
+        }
+        return (
+            <div className="flex flex-col items-center justify-center h-full text-stone-500 p-8 text-center">
+                <div className="bg-stone-100 p-6 rounded-full mb-4">
+                    {item.type === 'cad' ? <Ruler size={48} /> : item.type === 'model' ? <Box size={48}/> : <File size={48}/>}
+                </div>
+                <h3 className="text-xl font-bold text-stone-700 mb-2">无法在线预览此类文件</h3>
+                <p className="max-w-md mb-6">
+                    系统暂不支持在线浏览 <strong>.{item.name.split('.').pop()}</strong> 格式。
+                    <br/>请下载后使用专业软件（如 AutoCAD, SketchUp）查看。
+                </p>
+                {item.url && (
+                    <a href={item.url} download={item.name} className="px-6 py-2 bg-red-900 text-white rounded hover:bg-red-800 flex items-center gap-2">
+                        <DownloadCloud size={18}/> 下载文件
+                    </a>
+                )}
+            </div>
+        );
+    };
+
+    return (
+        <div className="fixed inset-0 z-[200] flex flex-col bg-stone-900/90 backdrop-blur-sm animate-fade-in" onClick={onClose}>
+            {/* Toolbar */}
+            <div className="flex items-center justify-between px-6 py-4 bg-black/40 text-white shrink-0" onClick={e => e.stopPropagation()}>
+                <div className="flex items-center gap-3 overflow-hidden">
+                    <div className="p-2 bg-white/10 rounded">
+                        {item.type === 'image' ? <Camera size={20}/> : <FileText size={20}/>}
+                    </div>
+                    <div className="min-w-0">
+                        <h3 className="font-bold truncate text-sm md:text-base">{item.name}</h3>
+                        <p className="text-xs text-stone-400">{item.size} • {item.date}</p>
+                    </div>
+                </div>
+                <div className="flex items-center gap-2">
+                    {item.url && (
+                        <a 
+                            href={item.url} 
+                            download={item.name}
+                            className="p-2 hover:bg-white/20 rounded-full transition-colors"
+                            title="下载"
+                            onClick={e => e.stopPropagation()}
+                        >
+                            <DownloadCloud size={20} />
+                        </a>
+                    )}
+                    <button onClick={onClose} className="p-2 hover:bg-red-600 rounded-full transition-colors ml-2">
+                        <X size={24} />
+                    </button>
+                </div>
+            </div>
+            
+            {/* Content Area */}
+            <div className="flex-grow overflow-hidden relative" onClick={e => e.stopPropagation()}>
+                {item.url ? renderContent() : (
+                    <div className="flex items-center justify-center h-full text-white">文件链接已失效</div>
+                )}
+            </div>
         </div>
     );
 };
@@ -77,6 +157,9 @@ export const RecordsPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<typeof TABS[number]['id']>('info');
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState<HeritageRecord | null>(null);
+
+  // Preview State
+  const [previewItem, setPreviewItem] = useState<ResourceItem | null>(null);
 
   // Hidden file input for adding assets
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -183,6 +266,7 @@ export const RecordsPage: React.FC = () => {
                             item={item} 
                             editable={isEditing}
                             onDelete={() => handleDeleteAsset(arrayKey, idx)}
+                            onPreview={() => setPreviewItem(item)}
                           />
                       ))}
                   </div>
@@ -199,6 +283,11 @@ export const RecordsPage: React.FC = () => {
     <div className="space-y-6">
       {/* Hidden Global File Input for Edit Mode */}
       <input type="file" ref={fileInputRef} className="hidden" onChange={handleFileSelect} />
+
+      {/* Preview Modal Overlay */}
+      {previewItem && (
+          <PreviewModal item={previewItem} onClose={() => setPreviewItem(null)} />
+      )}
 
       {/* Header & Controls */}
       <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4 border-b border-stone-200 pb-6">
